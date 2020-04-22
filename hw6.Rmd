@@ -1,0 +1,77 @@
+---
+title: "hw6test"
+author: "Cole Weber; cpwebs"
+date: "4/16/2020"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(readxl)
+```
+
+## Top dogs
+
+In this homework, you will try to reproduce the fantastic infographic for [top dogs](https://informationisbeautiful.net/visualizations/best-in-show-whats-the-top-data-dog/), originally produced by David McCandless. The raw data can be found [here](https://docs.google.com/spreadsheets/d/1l_HfF5EaN-QgnLc2UYdCc7L2CVrk0p3VdGB1godOyhk/edit#gid=10). You can download this file by File -- Download As -- Microsoft Excel (.xlsx).
+
+**Submission instructions**: Create a folder named `ds202_hw6`, and name the RMarkDown file including your solutions `hw6.Rmd` under this folder. For the submission, create a GitHub repository named `ds202_hw6` under your GitHub account, and push both `hw6.Rmd` and the knitted `hw6.html` before the deadline. I will assume you use the same GitHub username as for your HW5 submission. The latest version of your homework appearing on GitHub before the deadline is graded. *It is crucial to follow the exact folder structure and file names*, so that your homework can be reproduced and graded by an automated script. This homework is **due on April 22** before class.
+
+1. Import the data and clean appropriately. To read in the data, you can use `readxl::read_xlsx('fileNameHere', sheet='sheetNameHere')`. Required data are in the sheets `Best in show` and `Best in show full sheet`. Take extra care on the column names and the first few rows of the data frame after read in.
+
+```{r}
+show <- read_xlsx('kib1.xlsx',sheet = 'Best in show')
+showFulls <- read_xlsx('kib1.xlsx',sheet = 'Best in show full sheet')
+
+show1 <- show[-c(1, 2, 3, 4, 6), ]
+show2 <- subset(show1, select = -c(2,3,4,6,8,13,16,20,22,42,45,51,53,54,55))
+colnames(show2) <- show2[1,]
+show3 <- show2[-1, ] 
+
+showFulls1 <- showFulls[-c(1, 3), ]
+showFulls2 <- subset(showFulls1, select = -c(2,4,10,25,31,37,47,48,49,51))
+showFulls3 <- showFulls2[-1, ] 
+
+names(showFulls3)[1] <- "Dog breed"
+names(showFulls3)[2] <- "category"
+names(showFulls3)[3] <- "score"
+names(showFulls3)[4] <- "popularity"
+names(showFulls3)[27] <- "size"
+names(showFulls3)[35] <- "intelligence"
+
+showFulls3$score <- as.numeric(showFulls3$score)
+showFulls3$popularity <- as.numeric(showFulls3$popularity)
+showFulls3$size <- as.factor(showFulls3$size)
+showFulls3$intelligence <- as.factor(showFulls3$intelligence)
+
+showFulls4<-showFulls3[!(showFulls3$intelligence=="no data"),]
+showFulls4 <- showFulls4[-c(113, 118), ]
+showFulls4$intelligence <- as.factor(showFulls4$intelligence)
+```
+
+2. Create a graphics similar to the  [top dogs](https://informationisbeautiful.net/visualizations/best-in-show-whats-the-top-data-dog/) figure. Your figure needs to display the following information with appropriate plotting elements:
+
+- breed of dog
+- type of dog (work, toy, etc.)
+- size of dog
+- data score 
+- popularity
+- intelligence of the dog
+- appropriate legends & explanation
+
+
+```{r}
+showFulls4 %>%
+  ggplot(aes(x = popularity, y = score, color = category, label=`Dog breed`)) +
+  geom_point(aes(shape = intelligence,size = size)) +
+  geom_text(check_overlap = TRUE, vjust = 0, nudge_x = 0.05) +
+  labs(title="Best in Show: The Ultimate Dog Data", y = "Popularity", x = "Dog Score", color = "Category", label="Breed", shape = "Intelligence", size = "Size")
+```
+
+Hints and Notes:
+
+- The breed of dog can be displayed without the silhouttes (text only is fine)
+- Avoid (too much) overlaps!
+- Choose a good color scheme.
+- Your submission is supposed to be fully reproducible, i.e. the TA and I will 'knit' your submission in RStudio. 
